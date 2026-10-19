@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EchoSelf — Emotional Time Capsules</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --card: #1a1a24;
+      --accent: #7c5cff;
+      --accent2: #00d4ff;
+      --text: #e8e8f0;
+      --muted: #8888a0;
+      --success: #00c853;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-top: 20px;
+    }
+    h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .tagline { color: var(--muted); font-size: 1.05rem; }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+      background: var(--card);
+      padding: 6px;
+      border-radius: 14px;
+    }
+    .tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      color: var(--muted);
+    }
+    .tab.active {
+      background: var(--accent);
+      color: white;
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: #12121a;
+      color: var(--text);
+      font-size: 1rem;
+      margin-bottom: 16px;
+    }
+    textarea { min-height: 100px; resize: vertical; }
+    button {
+      background: linear-gradient(135deg, var(--accent), #5a3fff);
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    button:hover { transform: translateY(-1px); opacity: 0.95; }
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      margin-top: 10px;
+    }
+    .echo-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .echo-content { flex: 1; }
+    .mood {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      background: rgba(124,92,255,0.2);
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .status {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+    .status.sealed { background: rgba(255,100,100,0.15); color: #ff6b6b; }
+    .status.unlocked { background: rgba(0,200,83,0.15); color: var(--success); }
+    .meta { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
+    #chat-box {
+      height: 320px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-right: 6px;
+    }
+    .msg {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 0.95rem;
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .msg.ai {
+      align-self: flex-start;
+      background: #252532;
+      border-bottom-left-radius: 4px;
+    }
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 40px 20px;
+    }
+    .stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat {
+      flex: 1;
+      background: var(--card);
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .stat-num { font-size: 1.6rem; font-weight: 700; color: var(--accent2); }
+    .stat-label { font-size: 0.8rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>EchoSelf</h1>
+      <p class="tagline">Emotional time capsules + talk to your Future Self</p>
+    </header>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="create">Create</div>
+      <div class="tab" data-tab="vault">Vault</div>
+      <div class="tab" data-tab="chat">Future Self</div>
+    </div>
+
+    <!-- CREATE PANEL -->
+    <div id="create" class="panel active">
+      <div class="card">
+        <label>How are you feeling right now?</label>
+        <select id="mood">
+          <option value="hopeful">Hopeful 🌟</option>
+          <option value="struggling">Struggling 😔</option>
+          <option value="grateful">Grateful 🙏</option>
+          <option value="anxious">Anxious 😰</option>
+          <option value="proud">Proud 😊</option>
+          <option value="lost">Lost 🌀</option>
+          <option value="excited">Excited 🚀</option>
+          <option value="tired">Tired 😴</option>
+        </select>
+
+        <label>Write your Echo (what do you want your future self to hear?)</label>
+        <textarea id="echo-text" placeholder="I'm in the middle of... I feel... I hope that..."></textarea>
+
+        <button onclick="createEcho()">Seal this Echo 🔒</button>
+      </div>
+      <p style="text-align:center;color:var(--muted);font-size:0.9rem;margin-top:12px;">
+        The AI will decide when this Echo should resurface.
+      </p>
+    </div>
+
+    <!-- VAULT PANEL -->
+    <div id="vault" class="panel">
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-num" id="stat-total">0</div>
+          <div class="stat-label">Total Echos</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" id="stat-sealed">0</div>
+          <div class="stat-label">Still Sealed</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" id="stat-unlocked">0</div>
+          <div class="stat-label">Unlocked</div>
+        </div>
+      </div>
+
+      <button class="secondary" onclick="simulateResonance()" style="margin-bottom:20px;">
+        ✨ Simulate AI Resonance Unlock
+      </button>
+
+      <div id="echo-list"></div>
+    </div>
+
+    <!-- CHAT PANEL -->
+    <div id="chat" class="panel">
+      <div class="card">
+        <div id="chat-box"></div>
+        <input type="text" id="chat-input" placeholder="Ask your Future Self..." onkeydown="if(event.key==='Enter')sendChat()"/>
+        <button onclick="sendChat()">Send to Future Self</button>
+      </div>
+      <p style="text-align:center;color:var(--muted);font-size:0.85rem;margin-top:12px;">
+        Your Future Self is built from all the Echos you've sealed so far.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Simple localStorage store
+    let echos = JSON.parse(localStorage.getItem('echoself_echos') || '[]');
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+        if (tab.dataset.tab === 'vault') renderVault();
+        if (tab.dataset.tab === 'chat') renderChatWelcome();
+      });
+    });
+
+    function createEcho() {
+      const mood = document.getElementById('mood').value;
+      const text = document.getElementById('echo-text').value.trim();
+      if (!text) return alert('Write something first');
+
+      const echo = {
+        id: Date.now(),
+        mood,
+        text,
+        created: new Date().toISOString(),
+        unlocked: false,
+        unlockReason: null
+      };
+
+      echos.unshift(echo);
+      save();
+      document.getElementById('echo-text').value = '';
+      alert('Echo sealed. The AI will decide when it resurfaces.');
+      // switch to vault
+      document.querySelector('[data-tab="vault"]').click();
+    }
+
+    function save() {
+      localStorage.setItem('echoself_echos', JSON.stringify(echos));
+    }
+
+    function renderVault() {
+      const list = document.getElementById('echo-list');
+      const total = echos.length;
+      const sealed = echos.filter(e => !e.unlocked).length;
+      const unlocked = total - sealed;
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-sealed').textContent = sealed;
+      document.getElementById('stat-unlocked').textContent = unlocked;
+
+      if (total === 0) {
+        list.innerHTML = '<div class="empty">No Echos yet. Create your first one.</div>';
+        return;
+      }
+
+      list.innerHTML = echos.map(e => `
+        <div class="card">
+          <div class="echo-item">
+            <div class="echo-content">
+              <span class="mood">${e.mood}</span>
+              <div>${e.unlocked ? e.text : '••••••••••••••••••••••••••••'}</div>
+              <div class="meta">
+                Created ${new Date(e.created).toLocaleDateString()}
+                ${e.unlocked && e.unlockReason ? ' • ' + e.unlockReason : ''}
+              </div>
+            </div>
+            <span class="status ${e.unlocked ? 'unlocked' : 'sealed'}">
+              ${e.unlocked ? 'Unlocked' : 'Sealed'}
+            </span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function simulateResonance() {
+      const sealed = echos.filter(e => !e.unlocked);
+      if (sealed.length === 0) return alert('No sealed Echos left');
+
+      // Fake AI: randomly unlock one + give a reason
+      const target = sealed[Math.floor(Math.random() * sealed.length)];
+      const reasons = [
+        "You just entered a similar emotional state",
+        "Resonance detected with your current struggle",
+        "Your Future Self thinks you need this reminder",
+        "Pattern match: you've grown since this day",
+        "Surprise resonance — pure timing"
+      ];
+      target.unlocked = true;
+      target.unlockReason = reasons[Math.floor(Math.random() * reasons.length)];
+      save();
+      renderVault();
+      alert('An Echo just unlocked!\n\n' + target.unlockReason);
+    }
+
+    // Future Self chat (very simple context-aware)
+    let chatHistory = [];
+
+    function renderChatWelcome() {
+      const box = document.getElementById('chat-box');
+      if (chatHistory.length === 0) {
+        const context = echos.length > 0
+          ? `I see you've sealed ${echos.length} Echo${echos.length > 1 ? 's' : ''} so far. I'm built from them.`
+          : "You haven't sealed any Echos yet. Create some so I can know you better.";
+        box.innerHTML = `<div class="msg ai">Hey. I'm the version of you that has lived through everything you're about to experience.<br><br>${context}<br><br>What do you want to ask me?</div>`;
+      }
+    }
+
+    function sendChat() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const box = document.getElementById('chat-box');
+      box.innerHTML += `<div class="msg user">${text}</div>`;
+      input.value = '';
+
+      // Super simple "AI" response using echos as context
+      setTimeout(() => {
+        let reply = generateFutureSelfReply(text);
+        box.innerHTML += `<div class="msg ai">${reply}</div>`;
+        box.scrollTop = box.scrollHeight;
+      }, 600);
+    }
+
+    function generateFutureSelfReply(question) {
+      const q = question.toLowerCase();
+      const moods = echos.map(e => e.mood);
+      const recent = echos.slice(0, 3);
+
+      if (q.includes('future') || q.includes('will i') || q.includes('what happens')) {
+        return "I can't give you spoilers. But I can tell you this: the version of you that made it through the hard days is the one talking to you right now. Keep going.";
+      }
+      if (q.includes('advice') || q.includes('should i') || q.includes('what do i do')) {
+        if (moods.includes('struggling') || moods.includes('anxious') || moods.includes('lost')) {
+          return "Looking back at the Echos you left when things felt heavy... you always found a way. Even when you thought you wouldn't. Trust the pattern.";
+        }
+        return "From where I stand, the best moves you made were the ones that felt slightly scary but true. Start there.";
+      }
+      if (q.includes('proud') || q.includes('win') || q.includes('good')) {
+        return "I remember the days you sealed those grateful and proud Echos. Hold onto that feeling — it compounds.";
+      }
+      if (echos.length === 0) {
+        return "Seal some Echos first. The more of yourself you leave behind, the clearer I become.";
+      }
+
+      // Default contextual reply
+      const sample = recent[0];
+      return `I still carry the Echo from when you felt ${sample.mood}. "${sample.text.slice(0, 60)}${sample.text.length > 60 ? '...' : ''}" — that version of us is part of who I am now. What else is on your mind?`;
+    }
+
+    // Init
+    renderVault();
+  </script>
+</body>
+</html>
